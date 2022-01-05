@@ -1,0 +1,11 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo Packaging templates
+artifacts:
+  type: zip
+  files:
+    - template-apse2.yaml
+  discard-paths: true

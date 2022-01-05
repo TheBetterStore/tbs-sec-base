@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  TBS security base/shared security artefacts
+
+Parameters:
+
+  Environment:
+    Type: String
+    Default: "prod"
+
+Resources:
+
+  # NB We're basing data security on the following data classification levels
+  # (eg from: https://d1.awsstatic.com/whitepapers/compliance/AWS_Data_Classification.pdf):
+  # Level 1: Unclassified.
+  # Level 2: Internal; not sensitive but should not be released outside of the organistion.
+  # Level 3: Confidential; eg containing PII, PCI, PHI data
+
+  # Create keys for classified data classifications
+  InternalDataKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Level 2 - Internal; not sensitive but should not be released outside of the organistion.
+      Enabled: true
+      EnableKeyRotation: true
+      KeySpec: SYMMETRIC_DEFAULT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam:${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow key administration
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:group/SystemAdministrators'
+            Action:
+              - kms:Create*
+              - kms:Describe
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
+            Resource: '*'
+          - Sid: Allow DynamoDB use of key
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Sub ${AWS::AccountId}
+                kms:ViaService: "lambda.ap-southeast-2.amazonaws.com"
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+          - Sid: Allow groups to view data
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:group/Administrators'
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+      Tags:
+        - Key: Classfication
+          Value: Internal
+
+  InternalDataKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/prod/data/internal
+      TargetKeyId: !Ref InternalDataKmsKey
+
+  ConfidentialDataKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Level 2 - Internal; not sensitive but should not be released outside of the organistion.
+      Enabled: true
+      EnableKeyRotation: true
+      KeySpec: SYMMETRIC_DEFAULT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam:${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow key administration
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:group/SystemAdministrators'
+            Action:
+              - kms:Create*
+              - kms:Describe
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
+            Resource: '*'
+          - Sid: Allow DynamoDB use of key
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Sub ${AWS::AccountId}
+                kms:ViaService: "lambda.ap-southeast-2.amazonaws.com"
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+      Tags:
+        - Key: Classfication
+          Value: Confidential
+
+  ConfidentialDataKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/prod/data/confidential
+      TargetKeyId: !Ref ConfidentialDataKmsKey
+
+Outputs:
+
+  InternalDataKmsKeyId:
+    Description: Kms KeyId
+    Value: !Ref InternalDataKmsKey
+    Export:
+      Name: !Sub '${AWS::StackName}:InternalDataKmsKeyId'
+
+  ConfidentialDataKmsKeyId:
+    Description: Kms KeyId
+    Value: !Ref ConfidentialDataKmsKey
+    Export:
+      Name: !Sub '${AWS::StackName}:ConfidentialDataKmsKeyId'
