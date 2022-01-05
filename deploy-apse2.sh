@@ -10,6 +10,5 @@ aws cloudformation deploy \
 --region ap-southeast-2 --parameter-overrides \
 Environment=$Environment \
 --no-fail-on-empty-changeset \
---no-execute-changeset \
 --tags Environment=$Environment StackName=$STACK_NAME TagProduct=$APP_NAME \
 --profile thebetterstore

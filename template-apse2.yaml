@@ -29,16 +29,16 @@ Resources:
       KeyPolicy:
         Version: 2012-10-17
         Statement:
-          - Sid: Enable IAM User Permissions
+          - Sid: Enable IAM policies
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam:${AWS::AccountId}:root'
-            Action: 'kms:*'
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
             Resource: '*'
           - Sid: Allow key administration
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:group/SystemAdministrators'
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:user/keyadmin'
             Action:
               - kms:Create*
               - kms:Describe
@@ -71,7 +71,7 @@ Resources:
           - Sid: Allow groups to view data
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:group/Administrators'
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:user/keyadmin'
             Action:
               - kms:Decrypt
               - kms:GenerateDataKey*
@@ -102,13 +102,13 @@ Resources:
           - Sid: Enable IAM User Permissions
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam:${AWS::AccountId}:root'
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action: 'kms:*'
             Resource: '*'
           - Sid: Allow key administration
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:group/SystemAdministrators'
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:user/keyadmin'
             Action:
               - kms:Create*
               - kms:Describe
